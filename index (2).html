@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>面接向け実践英語フレーズ50 穴埋めクイズ</title>
+<style>
+    :root {
+        --primary: #005A9C;
+        --success: #28a745;
+        --danger: #dc3545;
+        --bg-light: #f8f9fa;
+        --text-main: #333;
+    }
+    body {
+        font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f0f2f5;
+        color: var(--text-main);
+    }
+    .app-container {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    .tabs {
+        display: flex;
+        background: #e9ecef;
+        border-bottom: 2px solid #dee2e6;
+    }
+    .tab {
+        flex: 1;
+        padding: 15px 10px;
+        text-align: center;
+        cursor: pointer;
+        font-weight: bold;
+        border: none;
+        background: none;
+        transition: 0.3s;
+        font-size: 0.95rem;
+    }
+    .tab.active {
+        background: white;
+        color: var(--primary);
+        border-bottom: 3px solid var(--primary);
+    }
+    .tab:hover:not(.active) {
+        background: #f1f3f5;
+    }
+    .content {
+        padding: 30px 20px;
+        min-height: 300px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .question-box {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    #ja-text {
+        font-size: 1.1rem;
+        font-weight: bold;
+        margin-bottom: 25px;
+        line-height: 1.5;
+        color: #495057;
+    }
+    #en-text {
+        font-size: 1.3rem;
+        line-height: 1.6;
+        color: #212529;
+    }
+    .blank {
+        display: inline-block;
+        min-width: 100px;
+        border-bottom: 3px solid var(--text-main);
+        color: transparent;
+        margin: 0 5px;
+        user-select: none;
+    }
+    .revealed {
+        color: var(--danger);
+        font-weight: bold;
+        border-bottom: 3px solid var(--danger);
+        padding: 0 5px;
+    }
+    .controls {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+    }
+    .btn {
+        padding: 12px 24px;
+        font-size: 1rem;
+        font-weight: bold;
+        cursor: pointer;
+        border: none;
+        border-radius: 8px;
+        color: white;
+        transition: 0.2s;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .btn:active {
+        transform: translateY(2px);
+        box-shadow: none;
+    }
+    .btn-primary { background: var(--primary); width: 100%; max-width: 300px;}
+    .btn-primary:hover { background: #004080; }
+    .btn-success { background: var(--success); flex: 1; max-width: 200px;}
+    .btn-danger { background: var(--danger); flex: 1; max-width: 200px;}
+    
+    #done-list {
+        display: none;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    .done-item {
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+    }
+    .done-en { font-weight: bold; color: var(--primary); margin-bottom: 5px;}
+    .done-ja { font-size: 0.9rem; color: #666; }
+    
+    .status-text {
+        text-align: center;
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-bottom: 15px;
+    }
+</style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="tabs">
+        <button class="tab active" id="tab-quiz" onclick="switchTab('quiz')">クイズ</button>
+        <button class="tab" id="tab-done" onclick="switchTab('done')">正解済み (<span id="done-count">0</span>)</button>
+        <button class="tab" id="tab-reset" onclick="resetQuiz()">リセット</button>
+    </div>
+
+    <div class="content">
+        <div id="quiz-section">
+            <div class="status-text" id="status-counter">残り: 50問</div>
+            <div class="question-box">
+                <div id="ja-text"></div>
+                <div id="en-text"></div>
+            </div>
+            
+            <div class="controls" id="control-show">
+                <button class="btn btn-primary" onclick="showAnswer()">正解を見る</button>
+            </div>
+            <div class="controls" id="control-judge" style="display: none;">
+                <button class="btn btn-success" onclick="judge(true)">正解</button>
+                <button class="btn btn-danger" onclick="judge(false)">不正解</button>
+            </div>
+        </div>
+
+        <div id="done-section" style="display: none;">
+            <div id="done-list-container"></div>
+            <div id="no-done-msg" style="text-align: center; color: #999; margin-top: 20px;">正解済みのフレーズはまだありません。</div>
+        </div>
+        
+        <div id="complete-section" style="display: none; text-align: center;">
+            <h2 style="color: var(--primary);">Congratulations!</h2>
+            <p>50個のフレーズをすべてマスターしました！<br>面接でのご健闘をお祈りします。</p>
+            <button class="btn btn-primary" style="margin-top:20px;" onclick="resetQuiz()">もう一度挑戦する</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// 問題データ (50問)
+const quizData = [
+    { blank: "proven track record", en: "I have a proven track record of driving digital transformation in enterprise companies.", ja: "私にはエンタープライズ企業でDXを推進してきた確かな実績があります。" },
+    { blank: "expertise lies in", en: "My expertise lies in B2B marketing and Salesforce implementation.", ja: "私の専門はB2BマーケティングとSalesforceの実装にあります。" },
+    { blank: "data-driven approach", en: "I always take a data-driven approach to optimize lead nurturing.", ja: "私はリード育成を最適化するため、常にデータ主導のアプローチをとります。" },
+    { blank: "drove a cross-functional project", en: "I drove a cross-functional project to improve marketing ROI.", ja: "マーケティングの投資対効果を改善するため、部門横断プロジェクトを牽引しました。" },
+    { blank: "cross-functional teams", en: "I am highly experienced in leading cross-functional teams.", ja: "私は部門横断チームを率いる経験が豊富です。" },
+    { blank: "stakeholder management", en: "Effective stakeholder management was the key to this project's success.", ja: "適切な利害関係者の調整が、このプロジェクト成功の鍵でした。" },
+    { blank: "built consensus", en: "I successfully built consensus between the sales and marketing departments.", ja: "営業部門とマーケティング部門の間で無事に合意を形成しました。" },
+    { blank: "bridge the gap", en: "My role was to bridge the gap between business needs and IT solutions.", ja: "私の役割は、ビジネス要件とITソリューションの橋渡しをすることでした。" },
+    { blank: "optimized the entire marketing process", en: "I optimized the entire marketing process, reducing operational costs.", ja: "マーケティングプロセス全体を最適化し、運用コストを削減しました。" },
+    { blank: "execute them hands-on", en: "I not only plan strategies but also execute them hands-on.", ja: "私は戦略を立てるだけでなく、現場で自ら実行します。" },
+    { blank: "maximize customer success", en: "My ultimate goal is to maximize customer success through data.", ja: "私の最終目標は、データを通じて顧客の成功を最大化することです。" },
+    { blank: "lead nurturing scenario", en: "I designed a highly effective lead nurturing scenario using Account Engagement.", ja: "Account Engagementを使用し、非常に効果的なリード育成シナリオを設計しました。" },
+    { blank: "building a strong sales pipeline", en: "I contributed to building a strong sales pipeline by aligning MQL and SQO.", ja: "MQLとSQOを連携させることで、強力な営業パイプラインの構築に貢献しました。" },
+    { blank: "actionable insights", en: "I analyze dashboard data to provide actionable insights for the C-suite.", ja: "ダッシュボードのデータを分析し、経営層に実行可能なインサイトを提供します。" },
+    { blank: "maximized the marketing ROI", en: "My initiatives significantly maximized the marketing ROI.", ja: "私の取り組みは、マーケティングのROIを大幅に最大化しました。" },
+    { blank: "Ensuring alignment", en: "Ensuring alignment between sales and marketing is my strong suit.", ja: "営業とマーケティングの方向性を合致させるのが私の得意分野です。" },
+    { blank: "transformed the organization", en: "I transformed the organization into a data-centric culture.", ja: "私は組織をデータ中心の文化へと変革しました。" },
+    { blank: "Leading change management", en: "Leading change management in a traditional enterprise requires patience and logic.", ja: "伝統的な大企業での変革管理には、忍耐と論理が必要です。" },
+    { blank: "facilitated discussions", en: "I facilitated discussions among executives to define our KPIs.", ja: "KPIを定義するため、経営層の議論を円滑に進行しました。" },
+    { blank: "took the initiative", en: "I took the initiative to implement the new evaluation framework.", ja: "私は率先して新しい評価フレームワークを導入しました。" },
+    { blank: "leverage the Salesforce ecosystem", en: "I want to leverage the Salesforce ecosystem to solve complex client issues.", ja: "Salesforceのエコシステムを活用して、顧客の複雑な課題を解決したいです。" },
+    { blank: "core value", en: "My core value is the fusion of project management and data analytics.", ja: "私のコアバリューは、プロジェクトマネジメントとデータ分析の融合です。" },
+    { blank: "value proposition", en: "We need to refine our value proposition for the mid-market segment.", ja: "ミッドマーケット層に向けた提供価値を洗練させる必要があります。" },
+    { blank: "enterprise and mid-market clients", en: "I understand the unique pain points of both enterprise and mid-market clients.", ja: "私は大企業と中堅企業、それぞれの特有の課題を理解しています。" },
+    { blank: "identify the client's pain points", en: "The first step is always to accurately identify the client's pain points.", ja: "第一歩は常に、顧客の課題を正確に特定することです。" },
+    { blank: "hands-on experience", en: "I have hands-on experience in configuring MA scenarios.", ja: "私にはMAのシナリオ設定に関する実践的な経験があります。" },
+    { blank: "C-level executives", en: "I am comfortable presenting strategic plans to C-level executives.", ja: "経営層に戦略計画をプレゼンすることに慣れています。" },
+    { blank: "strategic thinking", en: "I apply strategic thinking to daily marketing operations.", ja: "私は日々のマーケティング業務に戦略的思考を適用しています。" },
+    { blank: "quantitative and qualitative", en: "I evaluate performance from both quantitative and qualitative perspectives.", ja: "私は定量的・定性的な両面からパフォーマンスを評価します。" },
+    { blank: "bottleneck", en: "I identified the bottleneck in the sales funnel using Qlik Sense.", ja: "Qlik Senseを用いて、営業ファネル内のボトルネックを特定しました。" },
+    { blank: "sustainable business growth", en: "My focus is on helping clients achieve sustainable business growth.", ja: "私の焦点は、顧客が持続可能なビジネス成長を達成できるよう支援することです。" },
+    { blank: "mentorship", en: "I actively provide mentorship to junior marketing members.", ja: "私は若手のマーケティングメンバーに積極的にメンターシップを提供しています。" },
+    { blank: "high adaptability", en: "My 38-year career proves my high adaptability to new technologies like AI.", ja: "私の38年のキャリアは、AIのような新技術に対する高い適応力を証明しています。" },
+    { blank: "agile approach", en: "We need an agile approach to respond to rapid market changes.", ja: "急激な市場の変化に対応するためには、アジャイルなアプローチが必要です。" },
+    { blank: "Complex problem-solving", en: "Complex problem-solving is what I do best.", ja: "複雑な問題解決こそが私の得意とするところです。" },
+    { blank: "powerful synergy", en: "Combining traditional marketing with AI creates a powerful synergy.", ja: "伝統的なマーケティングとAIを組み合わせることで強力な相乗効果が生まれます。" },
+    { blank: "requirement gathering", en: "I conducted comprehensive requirement gathering before the system rollout.", ja: "システム展開の前に、包括的な要件定義を行いました。" },
+    { blank: "scalable marketing foundation", en: "I built a scalable marketing foundation for the company.", ja: "会社のために、拡張可能なマーケティング基盤を構築しました。" },
+    { blank: "actionable dashboards", en: "I created actionable dashboards to visualize marketing KPIs.", ja: "マーケティングKPIを可視化するための実践的なダッシュボードを作成しました。" },
+    { blank: "conversion rate", en: "My campaign successfully improved the conversion rate by 15%.", ja: "私のキャンペーンはコンバージョン率を15%改善することに成功しました。" },
+    { blank: "utilized the JQA assessment framework", en: "I utilized the JQA assessment framework to evaluate organizational health.", ja: "組織の健全性を評価するために、JQAアセスメントのフレームワークを活用しました。" },
+    { blank: "seamless integration", en: "I led the seamless integration of various marketing tools.", ja: "私は様々なマーケティングツールのシームレスな統合を主導しました。" },
+    { blank: "global best practices", en: "I always strive to implement global best practices in my operations.", ja: "私は常にグローバルなベストプラクティスを業務に導入するよう努めています。" },
+    { blank: "proactive stance", en: "I always take a proactive stance in identifying potential risks.", ja: "潜在的なリスクを特定する際、私は常に主体的な姿勢をとります。" },
+    { blank: "data-driven decision-making", en: "My goal is to enable data-driven decision-making across the board.", ja: "私の目標は、全社的にデータ主導の意思決定を可能にすることです。" },
+    { blank: "defining and tracking global KPIs", en: "I standardized the process of defining and tracking global KPIs.", ja: "グローバルKPIを定義し追跡するプロセスを標準化しました。" },
+    { blank: "resolving conflicts", en: "I am skilled at resolving conflicts between different departments.", ja: "私は異なる部門間の対立を解決することに長けています。" },
+    { blank: "customer retention", en: "Improving customer retention is critical for SaaS businesses.", ja: "顧客維持の改善はSaaSビジネスにとって不可欠です。" },
+    { blank: "out-of-the-box thinking", en: "AI implementation requires out-of-the-box thinking.", ja: "AIの導入には既存の枠にとらわれない思考が必要です。" },
+    { blank: "strong commitment", en: "You have my strong commitment to achieving your business goals.", ja: "貴社のビジネス目標達成に対して、私は強くコミットいたします。" }
+];
+
+let remainingList = [];
+let doneList = [];
+let currentQuestion = null;
+
+// 初期化
+function init() {
+    remainingList = [...quizData];
+    // シャッフル機能（出題順をランダムにする）
+    remainingList.sort(() => Math.random() - 0.5);
+    doneList = [];
+    updateCounter();
+    nextQuestion();
+}
+
+// 次の問題をセット
+function nextQuestion() {
+    if (remainingList.length === 0) {
+        document.getElementById('quiz-section').style.display = 'none';
+        document.getElementById('complete-section').style.display = 'block';
+        return;
+    }
+    
+    // リストの先頭から取得
+    currentQuestion = remainingList[0];
+    
+    // 画面にセット（英文の対象フレーズをアンダーラインに置換）
+    document.getElementById('ja-text').innerText = currentQuestion.ja;
+    const blankText = "__________";
+    const hiddenEn = currentQuestion.en.replace(currentQuestion.blank, `<span class="blank">${blankText}</span>`);
+    document.getElementById('en-text').innerHTML = hiddenEn;
+
+    // ボタンの表示切替
+    document.getElementById('control-show').style.display = 'flex';
+    document.getElementById('control-judge').style.display = 'none';
+    updateCounter();
+}
+
+// 正解を表示
+function showAnswer() {
+    const revealedEn = currentQuestion.en.replace(
+        currentQuestion.blank, 
+        `<span class="revealed">${currentQuestion.blank}</span>`
+    );
+    document.getElementById('en-text').innerHTML = revealedEn;
+    
+    document.getElementById('control-show').style.display = 'none';
+    document.getElementById('control-judge').style.display = 'flex';
+}
+
+// 判定（正解/不正解ボタンが押された時）
+function judge(isCorrect) {
+    const questionToMove = remainingList.shift(); // 先頭を削除
+    
+    if (isCorrect) {
+        // 正解済みリストへ移動
+        doneList.push(questionToMove);
+        renderDoneList();
+    } else {
+        // 不正解の場合はリストの最後尾に再度追加して残す
+        remainingList.push(questionToMove);
+    }
+    
+    nextQuestion();
+}
+
+// 正解済みリストの描画
+function renderDoneList() {
+    const container = document.getElementById('done-list-container');
+    container.innerHTML = '';
+    
+    if (doneList.length > 0) {
+        document.getElementById('no-done-msg').style.display = 'none';
+    } else {
+        document.getElementById('no-done-msg').style.display = 'block';
+    }
+
+    doneList.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'done-item';
+        div.innerHTML = `<div class="done-en">${item.en}</div><div class="done-ja">${item.ja}</div>`;
+        container.appendChild(div);
+    });
+    
+    document.getElementById('done-count').innerText = doneList.length;
+}
+
+// タブ切り替え
+function switchTab(tabName) {
+    // スタイル更新
+    document.getElementById('tab-quiz').classList.remove('active');
+    document.getElementById('tab-done').classList.remove('active');
+    document.getElementById('tab-' + tabName).classList.add('active');
+    
+    // コンテンツ表示切替
+    if (tabName === 'quiz') {
+        document.getElementById('done-section').style.display = 'none';
+        if (remainingList.length > 0) {
+            document.getElementById('quiz-section').style.display = 'block';
+            document.getElementById('complete-section').style.display = 'none';
+        } else {
+            document.getElementById('complete-section').style.display = 'block';
+        }
+    } else if (tabName === 'done') {
+        document.getElementById('quiz-section').style.display = 'none';
+        document.getElementById('complete-section').style.display = 'none';
+        document.getElementById('done-section').style.display = 'block';
+    }
+}
+
+// カウンター更新
+function updateCounter() {
+    document.getElementById('status-counter').innerText = `残り: ${remainingList.length}問`;
+}
+
+// リセット処理
+function resetQuiz() {
+    if(confirm("進行状況をリセットして最初からやり直しますか？")) {
+        document.getElementById('complete-section').style.display = 'none';
+        document.getElementById('quiz-section').style.display = 'block';
+        switchTab('quiz');
+        init();
+        renderDoneList();
+    }
+}
+
+// アプリ起動
+window.onload = init;
+</script>
+
+</body>
+</html>
