@@ -1,359 +1,444 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>面接向け実践英語フレーズ50 穴埋めクイズ</title>
-<style>
-    :root {
-        --primary: #005A9C;
-        --success: #28a745;
-        --danger: #dc3545;
-        --bg-light: #f8f9fa;
-        --text-main: #333;
-    }
-    body {
-        font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
-        max-width: 600px;
-        margin: 0 auto;
-        padding: 20px;
-        background-color: #f0f2f5;
-        color: var(--text-main);
-    }
-    .app-container {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        overflow: hidden;
-    }
-    .tabs {
-        display: flex;
-        background: #e9ecef;
-        border-bottom: 2px solid #dee2e6;
-    }
-    .tab {
-        flex: 1;
-        padding: 15px 10px;
-        text-align: center;
-        cursor: pointer;
-        font-weight: bold;
-        border: none;
-        background: none;
-        transition: 0.3s;
-        font-size: 0.95rem;
-    }
-    .tab.active {
-        background: white;
-        color: var(--primary);
-        border-bottom: 3px solid var(--primary);
-    }
-    .tab:hover:not(.active) {
-        background: #f1f3f5;
-    }
-    .content {
-        padding: 30px 20px;
-        min-height: 300px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-    .question-box {
-        text-align: center;
-        margin-bottom: 30px;
-    }
-    #ja-text {
-        font-size: 1.1rem;
-        font-weight: bold;
-        margin-bottom: 25px;
-        line-height: 1.5;
-        color: #495057;
-    }
-    #en-text {
-        font-size: 1.3rem;
-        line-height: 1.6;
-        color: #212529;
-    }
-    .blank {
-        display: inline-block;
-        min-width: 100px;
-        border-bottom: 3px solid var(--text-main);
-        color: transparent;
-        margin: 0 5px;
-        user-select: none;
-    }
-    .revealed {
-        color: var(--danger);
-        font-weight: bold;
-        border-bottom: 3px solid var(--danger);
-        padding: 0 5px;
-    }
-    .controls {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-    }
-    .btn {
-        padding: 12px 24px;
-        font-size: 1rem;
-        font-weight: bold;
-        cursor: pointer;
-        border: none;
-        border-radius: 8px;
-        color: white;
-        transition: 0.2s;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .btn:active {
-        transform: translateY(2px);
-        box-shadow: none;
-    }
-    .btn-primary { background: var(--primary); width: 100%; max-width: 300px;}
-    .btn-primary:hover { background: #004080; }
-    .btn-success { background: var(--success); flex: 1; max-width: 200px;}
-    .btn-danger { background: var(--danger); flex: 1; max-width: 200px;}
-    
-    #done-list {
-        display: none;
-        max-height: 400px;
-        overflow-y: auto;
-    }
-    .done-item {
-        padding: 15px;
-        border-bottom: 1px solid #eee;
-    }
-    .done-en { font-weight: bold; color: var(--primary); margin-bottom: 5px;}
-    .done-ja { font-size: 0.9rem; color: #666; }
-    
-    .status-text {
-        text-align: center;
-        color: #6c757d;
-        font-size: 0.9rem;
-        margin-bottom: 15px;
-    }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>英語面接スクリプト読み上げアプリ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body class="bg-gray-50 text-gray-800 font-sans overflow-hidden">
 
-<div class="app-container">
-    <div class="tabs">
-        <button class="tab active" id="tab-quiz" onclick="switchTab('quiz')">クイズ</button>
-        <button class="tab" id="tab-done" onclick="switchTab('done')">正解済み (<span id="done-count">0</span>)</button>
-        <button class="tab" id="tab-reset" onclick="resetQuiz()">リセット</button>
+  <!-- 音声合成非対応エラー画面 -->
+  <div id="unsupported-screen" class="hidden flex-col items-center justify-center h-screen p-6 text-center">
+    <h1 class="text-2xl font-bold mb-4">お使いのブラウザは音声合成に対応していません。</h1>
+    <p>Chrome, Safari, Edgeなどの最新のブラウザをご利用ください。</p>
+  </div>
+
+  <!-- 開始画面 -->
+  <div id="start-screen" class="flex flex-col items-center justify-center h-screen bg-gradient-to-br from-indigo-50 to-blue-100 p-6 text-center">
+    <h1 class="text-3xl font-bold text-indigo-900 mb-6">英語面接 スクリプト練習</h1>
+    <p class="mb-8 text-gray-600 max-w-md">
+      画面をタップするごとに1文ずつ読み上げます。<br/>
+      ご自身のペースで発音とスクリプトの内容を確認できます。
+    </p>
+    <button id="btn-start" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-10 rounded-full shadow-lg transform transition hover:scale-105 flex items-center gap-3">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+      練習をスタート
+    </button>
+  </div>
+
+  <!-- メイン画面 -->
+  <div id="main-screen" class="hidden flex-col h-screen relative overflow-hidden">
+    <!-- ヘッダー -->
+    <header class="bg-white shadow-sm z-20 relative">
+      <div class="h-1.5 w-full bg-gray-200">
+        <div id="progress-bar" class="h-full bg-indigo-600 transition-all duration-300" style="width: 0%;"></div>
+      </div>
+      <div class="flex justify-between items-center px-4 py-3">
+        <div id="counter" class="text-sm font-semibold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">1 / 100</div>
+        <div id="section-name" class="text-sm font-bold text-gray-700 flex-1 text-center truncate px-2">セクション名</div>
+        <div class="flex gap-2">
+          <button id="btn-settings" class="p-2 text-gray-500 hover:bg-gray-100 rounded-full">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          </button>
+          <button id="btn-menu" class="p-2 text-gray-500 hover:bg-gray-100 rounded-full">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- メインコンテンツ (タップエリア) -->
+    <main class="flex-1 relative flex flex-col justify-center items-center px-6 overflow-hidden">
+      <!-- 左右のタップゾーン -->
+      <div id="tap-prev" class="absolute inset-y-0 left-0 w-1/3 z-10 cursor-pointer"></div>
+      <div id="tap-next" class="absolute inset-y-0 right-0 w-2/3 z-10 cursor-pointer"></div>
+
+      <!-- テキスト表示 -->
+      <div class="w-full max-w-2xl mx-auto z-0 flex flex-col items-center select-none pointer-events-none">
+        <div class="h-20 flex items-end justify-center mb-6 w-full opacity-40 transition-opacity">
+          <p id="prev-text" class="text-sm text-gray-500 text-center line-clamp-2"></p>
+        </div>
+        <div class="min-h-[160px] flex items-center justify-center w-full">
+          <p id="current-text" class="text-2xl md:text-3xl font-bold text-center leading-relaxed transition-all duration-300 text-gray-800"></p>
+        </div>
+        <div class="h-20 flex items-start justify-center mt-6 w-full opacity-40 transition-opacity">
+          <p id="next-text" class="text-sm text-gray-500 text-center line-clamp-2"></p>
+        </div>
+      </div>
+
+      <!-- タップのヒント -->
+      <div class="absolute inset-x-0 bottom-24 flex justify-between px-8 text-xs text-gray-400 pointer-events-none opacity-50">
+        <span>← Tap left to Previous</span>
+        <span>Tap right to Next →</span>
+      </div>
+    </main>
+
+    <!-- コントロールバー -->
+    <div class="bg-white border-t border-gray-200 px-6 py-4 pb-8 z-20 relative shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+      <div class="max-w-md mx-auto flex items-center justify-between">
+        <button id="btn-prev" class="p-3 text-gray-500 hover:text-indigo-600 disabled:opacity-30 rounded-full hover:bg-indigo-50 transition">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></svg>
+        </button>
+        <button id="btn-play-pause" class="p-4 rounded-full shadow-md text-white transition-transform active:scale-95 bg-indigo-500 hover:bg-indigo-600">
+          <!-- アイコンはJSで切り替え -->
+        </button>
+        <button id="btn-next" class="p-3 text-gray-500 hover:text-indigo-600 disabled:opacity-30 rounded-full hover:bg-indigo-50 transition">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+        </button>
+      </div>
     </div>
+  </div>
 
-    <div class="content">
-        <div id="quiz-section">
-            <div class="status-text" id="status-counter">残り: 50問</div>
-            <div class="question-box">
-                <div id="ja-text"></div>
-                <div id="en-text"></div>
-            </div>
-            
-            <div class="controls" id="control-show">
-                <button class="btn btn-primary" onclick="showAnswer()">正解を見る</button>
-            </div>
-            <div class="controls" id="control-judge" style="display: none;">
-                <button class="btn btn-success" onclick="judge(true)">正解</button>
-                <button class="btn btn-danger" onclick="judge(false)">不正解</button>
-            </div>
+  <!-- 設定モーダル -->
+  <div id="settings-modal" class="hidden absolute inset-0 bg-black bg-opacity-50 z-50 flex flex-col items-center justify-end sm:justify-center">
+    <div class="bg-white w-full sm:w-96 rounded-t-2xl sm:rounded-2xl p-6 shadow-2xl transition-transform transform">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-lg font-bold flex items-center gap-2">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          読み上げ設定
+        </h3>
+        <button id="close-settings" class="p-2 bg-gray-100 rounded-full">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 mb-2 flex justify-between">
+          <span>再生速度 (Rate)</span>
+          <span id="rate-display" class="font-bold text-indigo-600">1.0x</span>
+        </label>
+        <input id="rate-slider" type="range" min="0.5" max="1.5" step="0.1" value="1.0" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+        <div class="flex justify-between text-xs text-gray-400 mt-1">
+          <span>遅く</span><span>標準</span><span>速く</span>
         </div>
-
-        <div id="done-section" style="display: none;">
-            <div id="done-list-container"></div>
-            <div id="no-done-msg" style="text-align: center; color: #999; margin-top: 20px;">正解済みのフレーズはまだありません。</div>
-        </div>
-        
-        <div id="complete-section" style="display: none; text-align: center;">
-            <h2 style="color: var(--primary);">Congratulations!</h2>
-            <p>50個のフレーズをすべてマスターしました！<br>面接でのご健闘をお祈りします。</p>
-            <button class="btn btn-primary" style="margin-top:20px;" onclick="resetQuiz()">もう一度挑戦する</button>
-        </div>
+      </div>
+      <div class="mb-2">
+        <label class="block text-sm font-medium text-gray-700 mb-2">音声 (Voice)</label>
+        <select id="voice-select" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2.5"></select>
+      </div>
     </div>
-</div>
+  </div>
 
-<script>
-// 問題データ (50問)
-const quizData = [
-    { blank: "proven track record", en: "I have a proven track record of driving digital transformation in enterprise companies.", ja: "私にはエンタープライズ企業でDXを推進してきた確かな実績があります。" },
-    { blank: "expertise lies in", en: "My expertise lies in B2B marketing and Salesforce implementation.", ja: "私の専門はB2BマーケティングとSalesforceの実装にあります。" },
-    { blank: "data-driven approach", en: "I always take a data-driven approach to optimize lead nurturing.", ja: "私はリード育成を最適化するため、常にデータ主導のアプローチをとります。" },
-    { blank: "drove a cross-functional project", en: "I drove a cross-functional project to improve marketing ROI.", ja: "マーケティングの投資対効果を改善するため、部門横断プロジェクトを牽引しました。" },
-    { blank: "cross-functional teams", en: "I am highly experienced in leading cross-functional teams.", ja: "私は部門横断チームを率いる経験が豊富です。" },
-    { blank: "stakeholder management", en: "Effective stakeholder management was the key to this project's success.", ja: "適切な利害関係者の調整が、このプロジェクト成功の鍵でした。" },
-    { blank: "built consensus", en: "I successfully built consensus between the sales and marketing departments.", ja: "営業部門とマーケティング部門の間で無事に合意を形成しました。" },
-    { blank: "bridge the gap", en: "My role was to bridge the gap between business needs and IT solutions.", ja: "私の役割は、ビジネス要件とITソリューションの橋渡しをすることでした。" },
-    { blank: "optimized the entire marketing process", en: "I optimized the entire marketing process, reducing operational costs.", ja: "マーケティングプロセス全体を最適化し、運用コストを削減しました。" },
-    { blank: "execute them hands-on", en: "I not only plan strategies but also execute them hands-on.", ja: "私は戦略を立てるだけでなく、現場で自ら実行します。" },
-    { blank: "maximize customer success", en: "My ultimate goal is to maximize customer success through data.", ja: "私の最終目標は、データを通じて顧客の成功を最大化することです。" },
-    { blank: "lead nurturing scenario", en: "I designed a highly effective lead nurturing scenario using Account Engagement.", ja: "Account Engagementを使用し、非常に効果的なリード育成シナリオを設計しました。" },
-    { blank: "building a strong sales pipeline", en: "I contributed to building a strong sales pipeline by aligning MQL and SQO.", ja: "MQLとSQOを連携させることで、強力な営業パイプラインの構築に貢献しました。" },
-    { blank: "actionable insights", en: "I analyze dashboard data to provide actionable insights for the C-suite.", ja: "ダッシュボードのデータを分析し、経営層に実行可能なインサイトを提供します。" },
-    { blank: "maximized the marketing ROI", en: "My initiatives significantly maximized the marketing ROI.", ja: "私の取り組みは、マーケティングのROIを大幅に最大化しました。" },
-    { blank: "Ensuring alignment", en: "Ensuring alignment between sales and marketing is my strong suit.", ja: "営業とマーケティングの方向性を合致させるのが私の得意分野です。" },
-    { blank: "transformed the organization", en: "I transformed the organization into a data-centric culture.", ja: "私は組織をデータ中心の文化へと変革しました。" },
-    { blank: "Leading change management", en: "Leading change management in a traditional enterprise requires patience and logic.", ja: "伝統的な大企業での変革管理には、忍耐と論理が必要です。" },
-    { blank: "facilitated discussions", en: "I facilitated discussions among executives to define our KPIs.", ja: "KPIを定義するため、経営層の議論を円滑に進行しました。" },
-    { blank: "took the initiative", en: "I took the initiative to implement the new evaluation framework.", ja: "私は率先して新しい評価フレームワークを導入しました。" },
-    { blank: "leverage the Salesforce ecosystem", en: "I want to leverage the Salesforce ecosystem to solve complex client issues.", ja: "Salesforceのエコシステムを活用して、顧客の複雑な課題を解決したいです。" },
-    { blank: "core value", en: "My core value is the fusion of project management and data analytics.", ja: "私のコアバリューは、プロジェクトマネジメントとデータ分析の融合です。" },
-    { blank: "value proposition", en: "We need to refine our value proposition for the mid-market segment.", ja: "ミッドマーケット層に向けた提供価値を洗練させる必要があります。" },
-    { blank: "enterprise and mid-market clients", en: "I understand the unique pain points of both enterprise and mid-market clients.", ja: "私は大企業と中堅企業、それぞれの特有の課題を理解しています。" },
-    { blank: "identify the client's pain points", en: "The first step is always to accurately identify the client's pain points.", ja: "第一歩は常に、顧客の課題を正確に特定することです。" },
-    { blank: "hands-on experience", en: "I have hands-on experience in configuring MA scenarios.", ja: "私にはMAのシナリオ設定に関する実践的な経験があります。" },
-    { blank: "C-level executives", en: "I am comfortable presenting strategic plans to C-level executives.", ja: "経営層に戦略計画をプレゼンすることに慣れています。" },
-    { blank: "strategic thinking", en: "I apply strategic thinking to daily marketing operations.", ja: "私は日々のマーケティング業務に戦略的思考を適用しています。" },
-    { blank: "quantitative and qualitative", en: "I evaluate performance from both quantitative and qualitative perspectives.", ja: "私は定量的・定性的な両面からパフォーマンスを評価します。" },
-    { blank: "bottleneck", en: "I identified the bottleneck in the sales funnel using Qlik Sense.", ja: "Qlik Senseを用いて、営業ファネル内のボトルネックを特定しました。" },
-    { blank: "sustainable business growth", en: "My focus is on helping clients achieve sustainable business growth.", ja: "私の焦点は、顧客が持続可能なビジネス成長を達成できるよう支援することです。" },
-    { blank: "mentorship", en: "I actively provide mentorship to junior marketing members.", ja: "私は若手のマーケティングメンバーに積極的にメンターシップを提供しています。" },
-    { blank: "high adaptability", en: "My 38-year career proves my high adaptability to new technologies like AI.", ja: "私の38年のキャリアは、AIのような新技術に対する高い適応力を証明しています。" },
-    { blank: "agile approach", en: "We need an agile approach to respond to rapid market changes.", ja: "急激な市場の変化に対応するためには、アジャイルなアプローチが必要です。" },
-    { blank: "Complex problem-solving", en: "Complex problem-solving is what I do best.", ja: "複雑な問題解決こそが私の得意とするところです。" },
-    { blank: "powerful synergy", en: "Combining traditional marketing with AI creates a powerful synergy.", ja: "伝統的なマーケティングとAIを組み合わせることで強力な相乗効果が生まれます。" },
-    { blank: "requirement gathering", en: "I conducted comprehensive requirement gathering before the system rollout.", ja: "システム展開の前に、包括的な要件定義を行いました。" },
-    { blank: "scalable marketing foundation", en: "I built a scalable marketing foundation for the company.", ja: "会社のために、拡張可能なマーケティング基盤を構築しました。" },
-    { blank: "actionable dashboards", en: "I created actionable dashboards to visualize marketing KPIs.", ja: "マーケティングKPIを可視化するための実践的なダッシュボードを作成しました。" },
-    { blank: "conversion rate", en: "My campaign successfully improved the conversion rate by 15%.", ja: "私のキャンペーンはコンバージョン率を15%改善することに成功しました。" },
-    { blank: "utilized the JQA assessment framework", en: "I utilized the JQA assessment framework to evaluate organizational health.", ja: "組織の健全性を評価するために、JQAアセスメントのフレームワークを活用しました。" },
-    { blank: "seamless integration", en: "I led the seamless integration of various marketing tools.", ja: "私は様々なマーケティングツールのシームレスな統合を主導しました。" },
-    { blank: "global best practices", en: "I always strive to implement global best practices in my operations.", ja: "私は常にグローバルなベストプラクティスを業務に導入するよう努めています。" },
-    { blank: "proactive stance", en: "I always take a proactive stance in identifying potential risks.", ja: "潜在的なリスクを特定する際、私は常に主体的な姿勢をとります。" },
-    { blank: "data-driven decision-making", en: "My goal is to enable data-driven decision-making across the board.", ja: "私の目標は、全社的にデータ主導の意思決定を可能にすることです。" },
-    { blank: "defining and tracking global KPIs", en: "I standardized the process of defining and tracking global KPIs.", ja: "グローバルKPIを定義し追跡するプロセスを標準化しました。" },
-    { blank: "resolving conflicts", en: "I am skilled at resolving conflicts between different departments.", ja: "私は異なる部門間の対立を解決することに長けています。" },
-    { blank: "customer retention", en: "Improving customer retention is critical for SaaS businesses.", ja: "顧客維持の改善はSaaSビジネスにとって不可欠です。" },
-    { blank: "out-of-the-box thinking", en: "AI implementation requires out-of-the-box thinking.", ja: "AIの導入には既存の枠にとらわれない思考が必要です。" },
-    { blank: "strong commitment", en: "You have my strong commitment to achieving your business goals.", ja: "貴社のビジネス目標達成に対して、私は強くコミットいたします。" }
-];
+  <!-- 目次モーダル -->
+  <div id="menu-modal" class="hidden absolute inset-0 bg-black bg-opacity-50 z-50 flex justify-end">
+    <div class="bg-white w-4/5 max-w-sm h-full shadow-2xl flex flex-col">
+      <div class="p-4 border-b border-gray-200 flex justify-between items-center bg-indigo-50">
+        <h3 class="text-lg font-bold text-indigo-900 flex items-center gap-2">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+          目次
+        </h3>
+        <button id="close-menu" class="p-2 bg-white rounded-full text-gray-600 shadow-sm">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <div id="menu-list" class="flex-1 overflow-y-auto p-2"></div>
+    </div>
+  </div>
 
-let remainingList = [];
-let doneList = [];
-let currentQuestion = null;
+  <!-- アプリのロジック -->
+  <script>
+    const scriptData = [
+      { id: 0, section: "自己紹介（オープニング）", text: "Hi, thank you for the opportunity today." },
+      { id: 1, section: "自己紹介（オープニング）", text: "I’ve spent 38 years at Fujitsu, where I worked on business transformation through technology." },
+      { id: 2, section: "自己紹介（オープニング）", text: "In the past six years in particular, I’ve been leading initiatives to build data-driven marketing platforms using Salesforce, as well as driving business process re-engineering to improve decision-making across the organization." },
+      { id: 3, section: "強み", text: "My biggest strength is my project management experience in enterprise environments for over 30 years." },
+      { id: 4, section: "強み", text: "Based on that, I’m able to lead change management across multiple departments—especially in situations where there are conflicting interests—while also leveraging the latest marketing automation tools to maximize business outcomes." },
+      { id: 5, section: "今後の希望", text: "At this stage of my career, I’m looking for an opportunity where I can contribute to sustainable business growth as a professional." },
+      { id: 6, section: "今後の希望", text: "In the long term, I’m also considering becoming independent after the age of 65, so I’d like to continue building my expertise and experience in a challenging environment." },
+      { id: 7, section: "コア・バリュー", text: "The value I bring is this: I turn strategy into execution by overcoming organizational barriers through strong project management, and I visualize results using data analytics." },
+      { id: 8, section: "コア・バリュー", text: "By combining data with strong interpersonal skills, I help build sustainable revenue models." },
+      { id: 9, section: "志望理由", text: "The reason I’m interested in this role is that I believe I can contribute in areas such as cross-functional coordination in complex organizations, and improving pipeline visibility in partner marketing." },
+      { id: 10, section: "志望理由", text: "With my experience in channel business and my knowledge of marketing automation, I’m confident that I can contribute from day one." },
+      { id: 11, section: "志望理由", text: "At the same time, I believe this role would give me valuable opportunities to further grow my skills and experience." },
+      { id: 12, section: "弱み", text: "One area I would mention as a weakness is that I don’t have experience managing very large-scale system development projects." },
+      { id: 13, section: "弱み", text: "The largest project I’ve handled was about 100 person-months, over roughly one and a half years, with a team of around six members." },
+      { id: 14, section: "キャリアプラン", text: "Looking ahead, until around the age of 65, I’d like to further build my experience as a marketing and DX consultant in B2B and B2B2C domains, especially using Marketing Automation tools and AI." },
+      { id: 15, section: "キャリアプラン", text: "More specifically, I’d like to strengthen my expertise in areas such as: Resolving product or service cannibalization and optimizing business portfolios from a marketing perspective." },
+      { id: 16, section: "キャリアプラン", text: "Improving engagement by shifting from short-term campaign-driven marketing to mid- to long-term lead nurturing." },
+      { id: 17, section: "キャリアプラン", text: "Utilizing AI to generate personas, scenarios, and content, and applying them to advanced account-based marketing strategies." },
+      { id: 18, section: "キャリアプラン", text: "After 65, I plan to leverage my experience and network to work independently as a freelancer." },
+      { id: 19, section: "転職理由", text: "The reason I’m considering a career change is that I feel my current environment doesn’t provide enough opportunities to fully pursue my career goals." },
+      { id: 20, section: "転職理由", text: "So I’ve decided to take on a new challenge where I can continue to grow." },
+      { id: 21, section: "Background", text: "Let me briefly walk you through my professional background and the kind of impact I’ve focused on throughout my career." },
+      { id: 22, section: "Background", text: "I have three backgrounds." },
+      { id: 23, section: "Background", text: "The first is marketing data analysis using Salesforce and other methods. By providing management metrics such as marketing activity performance visualization, customer behavior analysis, and ROI, we have built a data-driven nurturing system." },
+      { id: 24, section: "Background", text: "The second is the promotion of cross-organizational BPR using the JQA evaluation framework. As a self-evaluator for the Japan Management Quality Council, I have contributed to the improvement of organizational processes, including clarifying organizational goals, identifying management issues, and selecting and implementing action items to be implemented." },
+      { id: 25, section: "Background", text: "The third is channel strategy. It is responsible for expanding the channel business through the establishment of a partner ecosystem, the integration of information and EDI portal sites, and the development support activities of small and medium-sized enterprises." },
+      { id: 26, section: "即戦力のアピール", text: "I have a long-term goal of becoming an independent marketing consultant by the time I’m 65." },
+      { id: 27, section: "即戦力のアピール", text: "That’s why, instead of just relying on a company, I want to consistently deliver results as a professional and build a strong track record and network along the way." },
+      { id: 28, section: "パターンA：Salesforce × 伴走型即戦力", text: "For example, I’d be a strong fit for mid-sized or growing companies that have implemented tools like Salesforce, but are struggling with alignment between sales and marketing, and haven’t been able to get full adoption in the field." },
+      { id: 29, section: "パターンA：Salesforce × 伴走型即戦力", text: "In my case, I can leverage my experience at Fujitsu, especially my ability to coordinate across departments as a PMO, as well as my experience in data-driven process improvement." },
+      { id: 30, section: "パターンA：Salesforce × 伴走型即戦力", text: "So rather than just configuring a system, I work closely with front-line teams, especially younger members, and make sure the tools are actually adopted and used effectively. I see myself as a hands-on partner who can drive real results." },
+      { id: 31, section: "パターンB：外資系 × チャネル開拓", text: "Another example would be foreign companies that have great products but are struggling to establish a partner network or distributor channels in the Japanese market." },
+      { id: 32, section: "パターンB：外資系 × チャネル開拓", text: "I believe I can add value there based on my experience at Fujitsu, where I worked on integrating and centralizing partner portal systems, as well as building structured training programs for new business development." },
+      { id: 33, section: "パターンB：外資系 × チャネル開拓", text: "Beyond just generating direct sales leads, I can also leverage tools like Salesforce to engage partners and help scale the sales ecosystem in Japan." },
+      { id: 34, section: "パターンC：サイロ化の解消（BPR）", text: "I’d also be a good match for companies where the organization has become siloed—for example, where marketing, sales, and development are not well aligned, leading to inefficiencies across the business." },
+      { id: 35, section: "パターンC：サイロ化の解消（BPR）", text: "I spent over 13 years in a corporate planning role, where I led cross-functional business process improvements based on JQA assessments, and also managed projects that bridged sales and product development by turning customer complaints into product improvements." },
+      { id: 36, section: "パターンC：サイロ化の解消（BPR）", text: "Because of that, I focus not just on introducing tools, but on aligning stakeholders and rebuilding the organization so it can operate in a more data-driven and integrated way across departments." },
+      { id: 37, section: "Experience (Marketing)", text: "Let me briefly walk you through my professional background and the kind of impact I’ve focused on throughout my career." },
+      { id: 38, section: "Experience (Marketing)", text: "I’ve spent my career working at the intersection of business strategy, marketing, and organizational transformation, with a strong focus on driving measurable results while changing mindsets and processes across organizations." },
+      { id: 39, section: "Experience (Marketing)", text: "I'd like to share my experience of marketing data analysis." },
+      { id: 40, section: "Experience (Marketing)", text: "A project where I led the establishment of a data-driven lead nurturing system combined with business process reform." },
+      { id: 41, section: "Experience (Marketing)", text: "At the time, most business units were heavily focused on short-term lead acquisition volume. As a result, mass email campaigns were executed repeatedly with weak targeting, which created a negative cycle of declining engagement, particularly in click-through rates." },
+      { id: 42, section: "Experience (Marketing)", text: "Rather than simply optimizing campaigns tactically, I addressed the root cause. I proposed a new approach that leveraged historical customer behavior data using Salesforce and marketing automation tools." },
+      { id: 43, section: "Experience (Marketing)", text: "The objective was to identify “hot leads” based on concrete actions, rather than treating all leads equally." },
+      { id: 44, section: "Experience (Marketing)", text: "We redesigned the process so that critical customer actions were scored and visualized, and only leads with a high likelihood of conversion were passed to Sales. This clarified the division of roles between Marketing and Sales and helped both functions focus on value, not volume." },
+      { id: 45, section: "Experience (Marketing)", text: "As a result, we achieved approximately a one-percent year-over-year increase in email CTR. While that number may sound modest, the larger impact was organizational." },
+      { id: 46, section: "Experience (Marketing)", text: "Stakeholders shifted their perspective from short-term acquisition to mid- and long-term customer development through structured nurturing. That mindset change significantly improved cross-team collaboration and decision-making quality." },
+      { id: 47, section: "Experience (BPR)", text: "I'd like to share my experience of cross organizational BPR." },
+      { id: 48, section: "Experience (BPR)", text: "I spent over a decade in corporate planning and business management, where I worked on promoting cross-organizational business process reform based on the JQA evaluation framework." },
+      { id: 49, section: "Experience (BPR)", text: "The main challenge was strong departmental silos. Customer needs and complaints from the field were not effectively reflected in product development, which led to stagnating competitiveness." },
+      { id: 50, section: "Experience (BPR)", text: "To address this, I introduced the JQA evaluation framework and conducted self-evaluates departments using objective, data-based criteria. This helped surface structural issues that were previously addressed only informally or subjectively." },
+      { id: 51, section: "Experience (BPR)", text: "More importantly, I designed a feedback mechanism where customer insights triggered collaboration between Sales and Design or Development teams. Because this required cooperation across departments with different priorities, I played a coordination role—aligning interests, facilitating discussions, and ensuring that improvements translated into concrete actions at a company-wide level." },
+      { id: 52, section: "Experience (BPR)", text: "Through this continuous improvement cycle, organizational processes were optimized, and the product under my responsibility achieved the number-one domestic market share for seven consecutive years. This experience reinforced my belief that sustainable competitive advantage comes not only from strategy, but from how effectively an organization learns and adapts." },
+      { id: 53, section: "Experience (Early Career)", text: "Earlier in my career, I worked in web marketing and channel strategy, where I led a company-wide initiative to integrate and centralize sales channel websites." },
+      { id: 54, section: "Experience (Early Career)", text: "At that time, around 80 websites were operated independently by various departments. This created high operational costs, inconsistent brand messaging, and a strong dependency on specific individuals, which increased operational risk." },
+      { id: 55, section: "Experience (Early Career)", text: "There was significant resistance initially, so I focused heavily on change management. I first secured executive support by positioning the initiative as a way to maximize partner business revenue, rather than as a cost-cutting exercise. Then, at the operational level, I communicated clearly how each department would benefit—through reduced costs, standardized operations, and faster information updates." },
+      { id: 56, section: "Experience (Early Career)", text: "Ultimately, we consolidated approximately 80 websites into 40, achieving a substantial reduction in operational costs and establishing a sustainable structure for delivering up-to-date, consistent information across channels." },
+      { id: 57, section: "Experience (Conclusion)", text: "Across all these roles, my consistent focus has been on using data and structured processes to drive both results and behavioral change. I’m particularly motivated by environments that value long-term impact, cross-functional collaboration, and continuous improvement, which is why I’m very interested in opportunities within a global organization like yours." },
+      { id: 58, section: "Q&A 1", text: "Q: What was the biggest pinch in the past when you felt that this might fail or that you were on fire? What specific actions did you take to put out the fire at that time?" },
+      { id: 59, section: "Q&A 1", text: "A: I went to apologize to the customer due to a problem with the introduction system at the customer. At that time, I explained that I would raise the incident to the development department and respond to it at a later date." },
+      { id: 60, section: "Q&A 1", text: "Q: Are there any episodes where you took on and solved a troublesome task that no one wanted to do or a problem that was neglected because it was difficult to solve?" },
+      { id: 61, section: "Q&A 1", text: "A: We reduced the number of websites for partner companies by department and built a new portal site. We closed 40 of our 80 websites and integrated the remaining 40 into a newly launched portal site." },
+      { id: 62, section: "Q&A 2", text: "Q: Do you have experience coordinating between departments with conflicting interests, such as sales, manufacturing, and administration? What did you do to convince both parties?" },
+      { id: 63, section: "Q&A 2", text: "A: I took the initiative and sustained the effort, ultimately transforming the organizational culture. I regularly collected complaints and improvement requests from on-site sales related to products, requested solutions from related departments such as the development department, and fed back the answers to the sales." },
+      { id: 64, section: "Q&A 2", text: "Q: Have you ever tried to persuade your boss or management to approve a new proposal or budget that was initially opposed? What logic and materials did you use?" },
+      { id: 65, section: "Q&A 2", text: "A: At first, the upper management opposed the thick booklet for deciding on the system configuration into a PDF. Using my personal connections, I obtained an app for PDF conversion, which was not released in Japan at the time, and actually converted it myself to show it to prove its convenience for sales people." },
+      { id: 66, section: "Q&A 3", text: "Q: Are there any cases where you have been involved in a case where 'work that was personalized' has been made into a manual and rule, and anyone can do it?" },
+      { id: 67, section: "Q&A 3", text: "A: We decided to transfer the portal site for partners, which was initially personalized, and explained the transfer work step by step so that the previous operation procedures were incorporated into a document and the members of the transfer destination could take over the work sequentially." },
+      { id: 68, section: "Q&A 3", text: "Q: How much have you reduced in terms of 'time' and 'cost' by replacing analog operations with digital ones, or by reducing unnecessary processes?" },
+      { id: 69, section: "Q&A 3", text: "A: Until now, catalogs for customers, detailed explanatory materials, and product specification manuals for sales/SE have been digitized and posted on the web, which has reduced printing, transportation, and warehousing costs by 90 million yen per year." },
+      { id: 70, section: "Q&A 4", text: "Q: Have you ever been approached by a customer who said, 'I'm consulting with you because it's you?' What do you think was the biggest factor in gaining customer trust at that time?" },
+      { id: 71, section: "Q&A 4", text: "A: I was told by the partner sales that I could trust you because I was there. By steadily continuing the A3 initiatives mentioned above, a virtuous cycle of business was created, and as a result, we were able to take the first place in the domestic market." },
+      { id: 72, section: "Q&A 4", text: "Q: What were your unique 'winning patterns' and 'ingenuity' in achieving your sales targets and finding new customers?" },
+      { id: 73, section: "Q&A 4", text: "A: We invited authoritative lecturers in developing new customers and gathered and trained new development personnel in various sales departments. After that, they collected the knowledge and know-how they gained in the process of developing new products and shared them with the sales department." },
+      { id: 74, section: "Q&A 5", text: "Q: What do you think the company values about you?" },
+      { id: 75, section: "Q&A 5", text: "A: My past experience as a marketer, Salesforce operation ability, ability to extract marketing insights, and ability to take initiative in collaborating with overseas members." },
+      { id: 76, section: "逆質問", text: "Is there someone currently in this position, or a predecessor? Or would this be starting completely from scratch?" },
+      { id: 77, section: "逆質問", text: "What is the position of the person I would report to? Also, would I have any direct reports?" },
+      { id: 78, section: "逆質問", text: "How many partners do you work with, and what industries or sectors are they typically in?" },
+      { id: 79, section: "逆質問", text: "Are there any sales targets or predefined KPIs?" },
+      { id: 80, section: "逆質問", text: "Would the role focus mainly on channel promotion, or would it also include responsibilities such as account management for each company, negotiating annual targets, and setting up incentive programs?" }
+    ];
 
-// 初期化
-function init() {
-    remainingList = [...quizData];
-    // シャッフル機能（出題順をランダムにする）
-    remainingList.sort(() => Math.random() - 0.5);
-    doneList = [];
-    updateCounter();
-    nextQuestion();
-}
+    // 状態管理
+    let currentIndex = 0;
+    let isPlaying = false;
+    let rate = 1.0;
+    let voices = [];
+    let selectedVoiceURI = '';
 
-// 次の問題をセット
-function nextQuestion() {
-    if (remainingList.length === 0) {
-        document.getElementById('quiz-section').style.display = 'none';
-        document.getElementById('complete-section').style.display = 'block';
-        return;
+    // DOM要素
+    const elStartScreen = document.getElementById('start-screen');
+    const elMainScreen = document.getElementById('main-screen');
+    const elProgress = document.getElementById('progress-bar');
+    const elCounter = document.getElementById('counter');
+    const elSectionName = document.getElementById('section-name');
+    const elPrevText = document.getElementById('prev-text');
+    const elCurrentText = document.getElementById('current-text');
+    const elNextText = document.getElementById('next-text');
+    const btnPlayPause = document.getElementById('btn-play-pause');
+    const btnPrev = document.getElementById('btn-prev');
+    const btnNext = document.getElementById('btn-next');
+    
+    // アイコンSVG定数
+    const iconPlay = '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>'; // Repeat Icon
+    const iconPause = '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>'; // Pause Icon
+
+    // ブラウザ対応チェック
+    if (!('speechSynthesis' in window)) {
+      document.getElementById('unsupported-screen').classList.remove('hidden');
+      document.getElementById('unsupported-screen').classList.add('flex');
+      elStartScreen.classList.add('hidden');
     }
-    
-    // リストの先頭から取得
-    currentQuestion = remainingList[0];
-    
-    // 画面にセット（英文の対象フレーズをアンダーラインに置換）
-    document.getElementById('ja-text').innerText = currentQuestion.ja;
-    const blankText = "__________";
-    const hiddenEn = currentQuestion.en.replace(currentQuestion.blank, `<span class="blank">${blankText}</span>`);
-    document.getElementById('en-text').innerHTML = hiddenEn;
 
-    // ボタンの表示切替
-    document.getElementById('control-show').style.display = 'flex';
-    document.getElementById('control-judge').style.display = 'none';
-    updateCounter();
-}
+    // 音声の読み込みとセレクトボックス設定
+    function loadVoices() {
+      const availableVoices = window.speechSynthesis.getVoices();
+      voices = availableVoices.filter(v => v.lang.startsWith('en'));
+      
+      const select = document.getElementById('voice-select');
+      select.innerHTML = '';
+      voices.forEach((voice) => {
+        const option = document.createElement('option');
+        option.value = voice.voiceURI;
+        option.textContent = `${voice.name} (${voice.lang})`;
+        select.appendChild(option);
+      });
 
-// 正解を表示
-function showAnswer() {
-    const revealedEn = currentQuestion.en.replace(
-        currentQuestion.blank, 
-        `<span class="revealed">${currentQuestion.blank}</span>`
-    );
-    document.getElementById('en-text').innerHTML = revealedEn;
-    
-    document.getElementById('control-show').style.display = 'none';
-    document.getElementById('control-judge').style.display = 'flex';
-}
-
-// 判定（正解/不正解ボタンが押された時）
-function judge(isCorrect) {
-    const questionToMove = remainingList.shift(); // 先頭を削除
-    
-    if (isCorrect) {
-        // 正解済みリストへ移動
-        doneList.push(questionToMove);
-        renderDoneList();
-    } else {
-        // 不正解の場合はリストの最後尾に再度追加して残す
-        remainingList.push(questionToMove);
-    }
-    
-    nextQuestion();
-}
-
-// 正解済みリストの描画
-function renderDoneList() {
-    const container = document.getElementById('done-list-container');
-    container.innerHTML = '';
-    
-    if (doneList.length > 0) {
-        document.getElementById('no-done-msg').style.display = 'none';
-    } else {
-        document.getElementById('no-done-msg').style.display = 'block';
+      if (voices.length > 0 && !selectedVoiceURI) {
+        const defaultVoice = voices.find(v => v.lang === 'en-US') || voices[0];
+        selectedVoiceURI = defaultVoice.voiceURI;
+        select.value = selectedVoiceURI;
+      }
     }
 
-    doneList.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'done-item';
-        div.innerHTML = `<div class="done-en">${item.en}</div><div class="done-ja">${item.ja}</div>`;
-        container.appendChild(div);
-    });
-    
-    document.getElementById('done-count').innerText = doneList.length;
-}
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
 
-// タブ切り替え
-function switchTab(tabName) {
-    // スタイル更新
-    document.getElementById('tab-quiz').classList.remove('active');
-    document.getElementById('tab-done').classList.remove('active');
-    document.getElementById('tab-' + tabName).classList.add('active');
-    
-    // コンテンツ表示切替
-    if (tabName === 'quiz') {
-        document.getElementById('done-section').style.display = 'none';
-        if (remainingList.length > 0) {
-            document.getElementById('quiz-section').style.display = 'block';
-            document.getElementById('complete-section').style.display = 'none';
-        } else {
-            document.getElementById('complete-section').style.display = 'block';
+    // UIの更新
+    function updateUI() {
+      const item = scriptData[currentIndex];
+      const progress = ((currentIndex + 1) / scriptData.length) * 100;
+      
+      elProgress.style.width = `${progress}%`;
+      elCounter.textContent = `${currentIndex + 1} / ${scriptData.length}`;
+      elSectionName.textContent = item.section;
+      
+      elPrevText.textContent = currentIndex > 0 ? scriptData[currentIndex - 1].text : '';
+      elCurrentText.textContent = item.text;
+      elNextText.textContent = currentIndex < scriptData.length - 1 ? scriptData[currentIndex + 1].text : '';
+      
+      // 再生中のスタイル変更
+      if (isPlaying) {
+        elCurrentText.classList.add('text-indigo-900');
+        elCurrentText.classList.remove('text-gray-800');
+        btnPlayPause.innerHTML = iconPause;
+        btnPlayPause.classList.replace('bg-indigo-500', 'bg-red-500');
+        btnPlayPause.classList.replace('hover:bg-indigo-600', 'hover:bg-red-600');
+      } else {
+        elCurrentText.classList.remove('text-indigo-900');
+        elCurrentText.classList.add('text-gray-800');
+        btnPlayPause.innerHTML = iconPlay;
+        btnPlayPause.classList.replace('bg-red-500', 'bg-indigo-500');
+        btnPlayPause.classList.replace('hover:bg-red-600', 'hover:bg-indigo-600');
+      }
+      
+      // ボタンの有効・無効
+      btnPrev.disabled = currentIndex === 0;
+      btnPrev.style.opacity = currentIndex === 0 ? '0.3' : '1';
+      btnNext.disabled = currentIndex === scriptData.length - 1;
+      btnNext.style.opacity = currentIndex === scriptData.length - 1 ? '0.3' : '1';
+    }
+
+    // 音声再生
+    function playCurrent() {
+      window.speechSynthesis.cancel();
+      const item = scriptData[currentIndex];
+      if (!item || !item.text) return;
+      
+      const utterance = new SpeechSynthesisUtterance(item.text);
+      utterance.lang = 'en-US';
+      utterance.rate = rate;
+      
+      if (selectedVoiceURI) {
+        const voice = voices.find(v => v.voiceURI === selectedVoiceURI);
+        if (voice) {
+          utterance.voice = voice;
         }
-    } else if (tabName === 'done') {
-        document.getElementById('quiz-section').style.display = 'none';
-        document.getElementById('complete-section').style.display = 'none';
-        document.getElementById('done-section').style.display = 'block';
+      }
+
+      utterance.onstart = () => { isPlaying = true; updateUI(); };
+      utterance.onend = () => { isPlaying = false; updateUI(); };
+      utterance.onerror = () => { isPlaying = false; updateUI(); };
+      
+      window.speechSynthesis.speak(utterance);
     }
-}
 
-// カウンター更新
-function updateCounter() {
-    document.getElementById('status-counter').innerText = `残り: ${remainingList.length}問`;
-}
+    // イベントリスナー: 開始
+    document.getElementById('btn-start').addEventListener('click', () => {
+      loadVoices(); // モバイル対応: ユーザージェスチャー内で明示的に呼び出し
+      elStartScreen.classList.add('hidden');
+      elMainScreen.classList.remove('hidden');
+      elMainScreen.classList.add('flex');
+      playCurrent();
+      updateUI();
+    });
 
-// リセット処理
-function resetQuiz() {
-    if(confirm("進行状況をリセットして最初からやり直しますか？")) {
-        document.getElementById('complete-section').style.display = 'none';
-        document.getElementById('quiz-section').style.display = 'block';
-        switchTab('quiz');
-        init();
-        renderDoneList();
+    // イベントリスナー: 前へ・次へ (タップ領域＆ボタン)
+    const handleNext = (e) => {
+      e.stopPropagation();
+      if (currentIndex < scriptData.length - 1) {
+        currentIndex++;
+        playCurrent();
+        updateUI();
+      }
+    };
+    const handlePrev = (e) => {
+      e.stopPropagation();
+      if (currentIndex > 0) {
+        currentIndex--;
+        playCurrent();
+        updateUI();
+      }
+    };
+
+    document.getElementById('tap-next').addEventListener('click', handleNext);
+    document.getElementById('btn-next').addEventListener('click', handleNext);
+    document.getElementById('tap-prev').addEventListener('click', handlePrev);
+    document.getElementById('btn-prev').addEventListener('click', handlePrev);
+
+    // イベントリスナー: 再生・一時停止
+    btnPlayPause.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (isPlaying) {
+        window.speechSynthesis.cancel();
+        isPlaying = false;
+        updateUI();
+      } else {
+        playCurrent();
+      }
+    });
+
+    // 設定モーダル
+    const modalSettings = document.getElementById('settings-modal');
+    document.getElementById('btn-settings').addEventListener('click', () => {
+      modalSettings.classList.remove('hidden');
+    });
+    document.getElementById('close-settings').addEventListener('click', () => {
+      modalSettings.classList.add('hidden');
+    });
+    document.getElementById('rate-slider').addEventListener('input', (e) => {
+      rate = parseFloat(e.target.value);
+      document.getElementById('rate-display').textContent = rate.toFixed(1) + 'x';
+    });
+    document.getElementById('voice-select').addEventListener('change', (e) => {
+      selectedVoiceURI = e.target.value;
+    });
+
+    // 目次モーダル
+    const modalMenu = document.getElementById('menu-modal');
+    const menuList = document.getElementById('menu-list');
+    
+    function renderMenu() {
+      menuList.innerHTML = '';
+      const sections = [...new Set(scriptData.map(item => item.section))];
+      
+      sections.forEach(secName => {
+        const secDiv = document.createElement('div');
+        secDiv.className = 'mb-4';
+        secDiv.innerHTML = `<div class="px-3 py-1 bg-gray-100 text-xs font-bold text-gray-500 sticky top-0 uppercase tracking-wider">${secName}</div>`;
+        
+        const items = scriptData.filter(item => item.section === secName);
+        items.forEach(item => {
+          const isCurrent = currentIndex === item.id;
+          const itemDiv = document.createElement('div');
+          itemDiv.className = `p-3 border-b border-gray-100 text-sm cursor-pointer transition-colors ${isCurrent ? 'bg-indigo-100 text-indigo-900 font-bold border-l-4 border-l-indigo-600' : 'hover:bg-gray-50 text-gray-700'}`;
+          itemDiv.innerHTML = `<div class="line-clamp-2">${item.text}</div>`;
+          itemDiv.addEventListener('click', () => {
+            currentIndex = item.id;
+            modalMenu.classList.add('hidden');
+            playCurrent();
+            updateUI();
+          });
+          secDiv.appendChild(itemDiv);
+        });
+        menuList.appendChild(secDiv);
+      });
     }
-}
 
-// アプリ起動
-window.onload = init;
-</script>
+    document.getElementById('btn-menu').addEventListener('click', () => {
+      renderMenu();
+      modalMenu.classList.remove('hidden');
+    });
+    document.getElementById('close-menu').addEventListener('click', () => {
+      modalMenu.classList.add('hidden');
+    });
 
+    // 初期化
+    updateUI();
+
+  </script>
 </body>
 </html>
